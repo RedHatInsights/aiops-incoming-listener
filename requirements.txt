@@ -1,0 +1,2 @@
+-i https://pypi.org/simple
+kafka-python==1.4.3
