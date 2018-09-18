@@ -44,7 +44,7 @@ objects:
           - name: KAFKA_SERVER
             value: platform-mq-kafka:9092
           - name: TOPIC
-            value: sample_topic
+            value: aiops-data
           image: aiops-incoming-listener
           imagePullPolicy: Always
           name: aiops-incoming-listener
