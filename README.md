@@ -53,7 +53,6 @@ And then run it as a Docker container
 ❯ docker run --env-file env.list -it aiops-incoming-listener
 ```
 
-
 # Related projects
 
 - [Message bus for Insights platform](https://github.com/RedHatInsights/platform-mq)
