@@ -10,12 +10,6 @@ objects:
       app: aiops-incoming-listener
     name: aiops-incoming-listener
   spec:
-    ports:
-    - name: 8080-tcp
-      port: 8080
-      protocol: TCP
-      targetPort: 8080
-
     selector:
       deploymentconfig: aiops-incoming-listener
     sessionAffinity: None
@@ -42,15 +36,14 @@ objects:
         containers:
         - env:
           - name: KAFKA_SERVER
-            value: platform-mq-kafka:9092
-          - name: TOPIC
-            value: aiops-data
+            value: platform-mq-cluster-kafka.platform-mq.svc:9092
+          - name: KAFKA_TOPIC
+            value: available
+          - name: NEXT_MICROSERVICE_URL
+            value: aiops-data-collector.local:8080
           image: aiops-incoming-listener
           imagePullPolicy: Always
           name: aiops-incoming-listener
-          ports:
-          - containerPort: 8080
-            protocol: TCP
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
         dnsPolicy: ClusterFirst
