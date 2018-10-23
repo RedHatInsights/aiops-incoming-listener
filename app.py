@@ -33,7 +33,7 @@ def listen() -> dict:
     receives.
     """
     server = os.environ.get('KAFKA_SERVER')
-    topic = os.environ.get('KAFKA_TOPIC')
+    topic = os.environ.get('KAFKA_CONSUMER_TOPIC')
 
     logger.info('Connecting to Kafka server (%s)', server)
     logger.info('Subscribing to topic: "%s"', topic)
@@ -48,7 +48,7 @@ def listen() -> dict:
 if __name__ == '__main__':
     # Check environment variables passed to container
     # pylama:ignore=C0103
-    env = {'KAFKA_SERVER', 'KAFKA_TOPIC', 'NEXT_MICROSERVICE_HOST'}
+    env = {'KAFKA_SERVER', 'KAFKA_CONSUMER_TOPIC', 'NEXT_MICROSERVICE_HOST'}
 
     if not env.issubset(os.environ):
         logger.error(
