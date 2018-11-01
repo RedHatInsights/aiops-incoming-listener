@@ -9,7 +9,7 @@ import requests
 # Setup logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger('consumer')
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 def hit_next_in_pipepine(payload: dict) -> None:
@@ -39,6 +39,8 @@ def listen() -> dict:
     logger.info('Subscribing to topic: "%s"', topic)
 
     consumer = KafkaConsumer(topic, bootstrap_servers=server)
+
+    logger.info('Consumer subscribed and active!')
 
     for msg in consumer:
         logger.debug('Received message: %s', str(msg))
