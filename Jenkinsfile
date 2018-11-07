@@ -219,6 +219,10 @@ def runStages() {
             resourceLimitCpu: '1000m',
             resourceRequestMemory: '256Mi',
             resourceLimitMemory: '1Gi'
+            envVars: [
+                envVar(key: 'LC_ALL', value: 'en_US.utf-8'),
+                envVar(key: 'LANG', value: 'en_US.utf-8'),
+            ],
         ),
     ]) {
         node(podLabel) {
