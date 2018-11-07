@@ -32,7 +32,6 @@ codecovThreshold = 0
 
 def resetContexts() {
     notify(unitTestContext, "PENDING")
-    notify(lintContext, "PENDING")
     notify(pipInstallContext, "PENDING")
     notify(coverageContext, "PENDING")
 }
