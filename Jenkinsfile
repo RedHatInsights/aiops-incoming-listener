@@ -129,7 +129,7 @@ def postPipfileComment(commitId, str) {
 
 def runUnitTests() {
     try {
-        sh "${userPath}/pipenv run python -m pytest --pylama --junitxml=junit.xml --cov=. --cov-report html tests/ -s -v"
+        sh "${userPath}/pipenv run python -m pytest --pylama --junitxml=junit.xml --cov=. --cov-report html -s -v"
         notify(unitTestContext, "SUCCESS")
     } catch (err) {
         echo err.getMessage()
