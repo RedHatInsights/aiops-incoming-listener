@@ -8,6 +8,10 @@ kafka-python = "*"
 requests = "*"
 
 [dev-packages]
+pytest = "*"
+coverage = "*"
+pytest-mock = "*"
+pytest-cov = "*"
 pylint = "*"
 pylama-pylint = "*"
 
