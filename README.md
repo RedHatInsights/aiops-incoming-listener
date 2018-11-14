@@ -1,35 +1,27 @@
-# AI-Ops incoming data listener
+# AI-Ops: Incoming listener microservice
+
+[![Build Status](https://travis-ci.org/ManageIQ/aiops-incoming-listener.svg?branch=master)](https://travis-ci.org/ManageIQ/aiops-incoming-listener)
+[![License](https://img.shields.io/badge/license-APACHE2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 
 Kafka listener collecting messages containing data relevant to AI-Ops
 
-## OpenShift Deployment
+## Get Started
 
-Please consult [`aiops-deploy` repository](https://github.com/tumido/aiops-deploy) for deployment scheme.
+* Learn about other services within our pipeline
+  - [incoming-listener](https://github.com/ManageIQ/aiops-incoming-listener)
+  - [data-collector](https://github.com/ManageIQ/aiops-data-collector)
+  - [publisher](https://github.com/ManageIQ/aiops-publisher)
+* Discover all AI services we're integrating with
+  - [dummy-ai](https://github.com/ManageIQ/aiops-dummy-ai-service)
+  - [aicoe-insights-clustering](https://github.com/RedHatInsights/aicoe-insights-clustering)
+* See deployment templates in the [e2e-deploy](https://github.com/RedHatInsights/e2e-deploy) repository
 
-# Local build
+## Configure
 
-If you would like to deploy the clustering service locally, you can build the container using [S2I](https://github.com/openshift/source-to-image)
+* `KAFKA_SERVER` - specify message bus server
+* `KAFKA_TOPIC` - topic to consume
+* `NEXT_MICROSERVICE_HOST` - where to pass the collected data (`hostname:port`)
 
-```
-❯ s2i build -c . centos/python-36-centos7 aiops-incoming-listener
-```
+## License
 
-For convenience you can store your desired environment variables in a separate file
-
-```
-❯ cat << EOT >> env.list
-KAFKA_SERVER=<HOSTNAME:PORT>
-TOPIC=<SUBSCRIBED_TOPIC>
-EOT
-```
-
-And then run it as a Docker container
-
-```
-❯ docker run --env-file env.list -it aiops-incoming-listener
-```
-
-# Related projects
-
-- [Message bus for Insights platform](https://github.com/RedHatInsights/platform-mq)
-- [AI service](https://github.com/RedHatInsights/aicoe-insights-clustering)
+See [LICENSE](LICENSE)
