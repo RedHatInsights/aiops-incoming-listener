@@ -2,6 +2,7 @@ import os
 import logging
 import sys
 from json import loads
+from uuid import uuid4
 
 from kafka import KafkaConsumer
 import requests
@@ -34,11 +35,22 @@ def listen() -> dict:
     """
     server = os.environ.get('KAFKA_SERVER')
     topic = os.environ.get('KAFKA_TOPIC')
+    group_id = os.environ.get('KAFKA_CLIENT_GROUP')
+    client_id = uuid4()
 
-    logger.info('Connecting to Kafka server (%s)', server)
-    logger.info('Subscribing to topic: "%s"', topic)
+    logger.info('Connecting to Kafka server...')
+    logger.info('Client configuration:')
+    logger.info('\tserver:    %s', server)
+    logger.info('\ttopic:     %s', topic)
+    logger.info('\tgroup_id:  %s', group_id)
+    logger.info('\tclient_id: %s', client_id)
 
-    consumer = KafkaConsumer(topic, bootstrap_servers=server)
+    consumer = KafkaConsumer(
+        topic,
+        client_id=client_id,
+        group_id=group_id,
+        bootstrap_servers=server
+    )
 
     logger.info('Consumer subscribed and active!')
 
