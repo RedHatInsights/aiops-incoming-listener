@@ -3,60 +3,146 @@ import logging
 import sys
 from json import loads
 from uuid import uuid4
+import asyncio
 
-from kafka import KafkaConsumer
-import requests
+import aiohttp
+from aiokafka import AIOKafkaConsumer, ConsumerRecord
 
 # Setup logging
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(
+    level=logging.WARNING,
+    format=(
+        "[%(asctime)s] %(levelname)s "
+        "[%(name)s.%(funcName)s:%(lineno)d] %(message)s"
+    )
+)
 logger = logging.getLogger('consumer')
 logger.setLevel(logging.DEBUG)
 
+# Globals
+# Asynchronous event loop
+MAIN_LOOP = asyncio.get_event_loop()
 
-def hit_next_in_pipepine(payload: dict) -> None:
-    """Pass the data to next service in line."""
-    host = os.environ.get('NEXT_MICROSERVICE_HOST')
+# Kafka listener config
+SERVER = os.environ.get('KAFKA_SERVER')
+TOPIC = os.environ.get('KAFKA_TOPIC')
+GROUP_ID = os.environ.get('KAFKA_CLIENT_GROUP')
+CLIENT_ID = uuid4()
 
-    # FIXME: Convert to aiohttp or some other async requests alternative
-    # Do not wait for response now, so we can keep listening
-    try:
-        requests.post(f'http://{host}', json=payload, timeout=10)
-    except requests.exceptions.ReadTimeout:
-        pass
-    except requests.exceptions.ConnectionError as e:
-        logger.warning('Call to next service failed: %s', str(e))
+# Properties required to be present in a message
+VALIDATE_PRESENCE = {'url'}
+
+# Next micro-service host:port
+HOST_URL = "http://{0}".format(os.environ.get('NEXT_MICROSERVICE_HOST'))
+MAX_RETRIES = 3
 
 
-def listen() -> dict:
-    """Kafka messages listener.
+async def hit_next(msg_id: str, message: dict) -> None:
+    """Send message as JSON to the HOST via HTTP Post.
 
-    Connects to Kafka server, consumes a topic and yields every message it
-    receives.
+    Perform a async HTTP post call to the next micro-service endpoint
+    specified via NEXT_MICROSERVICE_HOST env. variable.
+    The message is serialized as JSON
+    :param msg_id: Message identifier used in logs
+    :param message: A dictionary sent as a payload
+    :return: None
     """
-    server = os.environ.get('KAFKA_SERVER')
-    topic = os.environ.get('KAFKA_TOPIC')
-    group_id = os.environ.get('KAFKA_CLIENT_GROUP')
-    client_id = uuid4()
+    # Basic response
+    output = {
+        'url': message.get('url'),
+        'origin': TOPIC
+    }
 
+    # Additional data
+    if message.get('rh_account'):
+        output['metadata'] = {
+            'rh_account': message.get('rh_account')
+        }
+
+    # Pass data to the next microservice
+    logger.debug('Message %s: forwarding...', msg_id)
+    async with aiohttp.ClientSession(raise_for_status=True) as session:
+        for attempt in range(MAX_RETRIES):
+            try:
+                await session.post(HOST_URL, json=output)
+            except aiohttp.ClientResponseError as e:
+                logging.warning(
+                    'Async request failed (attempt #%d), retrying: %s',
+                    attempt, str(e)
+                )
+                continue
+            else:
+                break
+    logger.debug('Message %s: sent', msg_id)
+
+
+async def process_message(message: ConsumerRecord) -> None:
+    """Take a message and process it.
+
+    Parse the collected message and check if it's in valid for. If so,
+    validate it contains the data we're interested in and pass it to next
+    service in line.
+    :param message: Raw Kafka message which should be interpreted
+    :return: None
+    """
+    msg_id = f'#{message.partition}_{message.offset}'
+    logger.debug("Message %s: parsing...", msg_id)
+
+    # Parse the message as JSON
+    try:
+        message = loads(message.value)
+    except ValueError as e:
+        logger.error(
+            'Unable to parse message %s: %s',
+            str(message), str(e)
+        )
+        return
+
+    logger.debug('Message %s: %s', msg_id, str(message))
+
+    # Select only the interesting messages
+    if not VALIDATE_PRESENCE.issubset(message.keys()):
+        return
+
+    await hit_next(msg_id, message)
+
+    logger.info('Message %s: Done', msg_id)
+
+
+async def consume_messages() -> None:
+    """Listen to Kafka topic and fetch messages.
+
+    Connects to Kafka server, consumes a topic and schedules a task for
+    processing the message.
+    :return None
+    """
     logger.info('Connecting to Kafka server...')
     logger.info('Client configuration:')
-    logger.info('\tserver:    %s', server)
-    logger.info('\ttopic:     %s', topic)
-    logger.info('\tgroup_id:  %s', group_id)
-    logger.info('\tclient_id: %s', client_id)
+    logger.info('\tserver:    %s', SERVER)
+    logger.info('\ttopic:     %s', TOPIC)
+    logger.info('\tgroup_id:  %s', GROUP_ID)
+    logger.info('\tclient_id: %s', CLIENT_ID)
 
-    consumer = KafkaConsumer(
-        topic,
-        client_id=client_id,
-        group_id=group_id,
-        bootstrap_servers=server
+    consumer = AIOKafkaConsumer(
+        TOPIC,
+        loop=MAIN_LOOP,
+        client_id=CLIENT_ID,
+        group_id=GROUP_ID,
+        bootstrap_servers=SERVER
     )
 
+    # Get cluster layout, subscribe to group
+    await consumer.start()
     logger.info('Consumer subscribed and active!')
 
-    for msg in consumer:
-        logger.debug('Received message: %s', str(msg))
-        yield loads(msg.value)
+    # Start consuming messages
+    try:
+        async for msg in consumer:
+            logger.debug('Received message: %s', str(msg))
+            MAIN_LOOP.create_task(process_message(msg))
+
+    finally:
+        await consumer.stop()
 
 
 if __name__ == '__main__':
@@ -72,20 +158,4 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # Run the consumer
-    for received in listen():
-        if 'url' not in received:
-            logger.warning(
-                'Message is missing data location URL. Message ignored: %s',
-                received
-            )
-            continue
-
-        message = {
-            'url': received.get('url'),
-            'origin': 'kafka',
-            'metadata': {
-                'rh_account': received.get('rh_account', None)
-            }
-        }
-
-        hit_next_in_pipepine(message)
+    MAIN_LOOP.run_until_complete(consume_messages())
