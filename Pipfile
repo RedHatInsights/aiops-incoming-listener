@@ -4,8 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-kafka-python = "*"
-requests = ">=2.20.0"
+aiokafka = "*"
+aiohttp = "*"
 
 [dev-packages]
 pytest = "*"
