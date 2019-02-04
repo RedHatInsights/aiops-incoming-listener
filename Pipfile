@@ -14,6 +14,8 @@ pytest-mock = "*"
 pytest-cov = "*"
 pylint = "*"
 pylama-pylint = "*"
+pytest-asyncio = "*"
+pytest-aiohttp = "*"
 
 [requires]
 python_version = "3.6"
