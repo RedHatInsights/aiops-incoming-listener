@@ -6,6 +6,7 @@ from aiohttp import web
 
 import app as original_app
 
+
 @pytest.fixture
 def app(request, monkeypatch):
     """Set up environment and load app module."""
@@ -28,13 +29,14 @@ def app(request, monkeypatch):
 
 
 @pytest.fixture
-async def stub_server(aiohttp_server):
+async def stub_server(request, aiohttp_server):
     """Create a test server."""
     output = dict(requests=[])
 
-    async def handler(request):
+    async def handler(_):
         """Test server endpoint handler."""
-        return web.Response(body=b'Success')
+        resp = getattr(request, 'param', dict(body=b'Success'))
+        return web.Response(**resp)
 
     @web.middleware
     async def any_request_middleware(request, handler):

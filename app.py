@@ -37,7 +37,7 @@ HOST_URL = "http://{0}".format(os.environ.get('NEXT_MICROSERVICE_HOST'))
 MAX_RETRIES = 3
 
 
-async def hit_next(msg_id: str, message: dict) -> None:
+async def hit_next(msg_id: str, message: dict) -> aiohttp.ClientResponse:
     """Send message as JSON to the HOST via HTTP Post.
 
     Perform a async HTTP post call to the next micro-service endpoint
@@ -45,7 +45,7 @@ async def hit_next(msg_id: str, message: dict) -> None:
     The message is serialized as JSON
     :param msg_id: Message identifier used in logs
     :param message: A dictionary sent as a payload
-    :return: None
+    :return: HTTP response
     """
     # Basic response
     output = {
@@ -64,16 +64,19 @@ async def hit_next(msg_id: str, message: dict) -> None:
     async with aiohttp.ClientSession(raise_for_status=True) as session:
         for attempt in range(MAX_RETRIES):
             try:
-                await session.post(HOST_URL, json=output)
-            except aiohttp.ClientResponseError as e:
+                resp = await session.post(HOST_URL, json=output)
+                logger.debug('Message %s: sent', msg_id)
+                break
+            except aiohttp.ClientError as e:
                 logging.warning(
                     'Async request failed (attempt #%d), retrying: %s',
                     attempt, str(e)
                 )
-                continue
-            else:
-                break
-    logger.debug('Message %s: sent', msg_id)
+                resp = e
+        else:
+            logging.error('All attempts failed!')
+            raise resp
+    return resp
 
 
 async def process_message(message: ConsumerRecord) -> None:
@@ -104,7 +107,10 @@ async def process_message(message: ConsumerRecord) -> None:
     if not VALIDATE_PRESENCE.issubset(message.keys()):
         return
 
-    await hit_next(msg_id, message)
+    try:
+        await hit_next(msg_id, message)
+    except aiohttp.ClientError:
+        logger.warning('Message %s: Unable to pass message', msg_id)
 
     logger.info('Message %s: Done', msg_id)
 
