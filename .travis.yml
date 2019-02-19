@@ -7,3 +7,4 @@ install:
   - pipenv sync --dev
 script:
   - pylama
+  - pytest
