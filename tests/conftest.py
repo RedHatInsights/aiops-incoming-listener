@@ -5,7 +5,7 @@ from datetime import datetime
 import pytest
 from aiohttp import web
 from aiokafka import ConsumerRecord
-
+import asynctest
 
 import app as original_app
 
@@ -24,11 +24,13 @@ def app(request, monkeypatch):
     # Setup new asyncio loop
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+    monkeypatch.setattr('app.MAIN_LOOP', loop)
 
     # Reload app module to propagate env. changes
     reload(original_app)
 
     yield original_app
+    loop.close()
 
 
 @pytest.fixture
@@ -67,3 +69,26 @@ def message(request):
     return ConsumerRecord(
         'topic', 0, 0, datetime.now(), '', '', request.param, '', '', ''
     )
+
+
+@pytest.fixture(params=(list(),))
+def kafka_consumer(request, mocker):
+    """Mock AIOKafkaConsumer.
+
+    Creates a mock for AIOKafkaConsumer with patched:
+    - start()
+    - stop()
+    - consumed message list (taken from `request.param`)
+    """
+    consumer = mocker.patch('app.AIOKafkaConsumer',
+                            new_callable=asynctest.MagicMock)
+
+    f_start = asyncio.Future()
+    consumer.return_value.start.return_value = f_start
+    f_start.set_result(True)
+    consumer.return_value.__aiter__.return_value = request.param
+    f_stop = asyncio.Future()
+    consumer.return_value.stop.return_value = f_stop
+    f_stop.set_result(True)
+
+    yield consumer

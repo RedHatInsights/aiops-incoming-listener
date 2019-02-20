@@ -37,7 +37,6 @@ class TestHitNext:
         """Hit invalid endpoint."""
         with pytest.raises(ClientResponseError):
             await app.hit_next('STUB_ID', {'url': 'http://STUB.URL'})
-            assert err.status == 404
 
         assert len(stub_server['requests']) == app.MAX_RETRIES
         for req in stub_server['requests']:

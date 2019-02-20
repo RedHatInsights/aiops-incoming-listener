@@ -16,6 +16,7 @@ pylint = "*"
 pylama-pylint = "*"
 pytest-asyncio = "*"
 pytest-aiohttp = "*"
+asynctest = "*"
 
 [requires]
 python_version = "3.6"
