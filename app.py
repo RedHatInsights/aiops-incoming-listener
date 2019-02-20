@@ -153,17 +153,22 @@ async def consume_messages() -> None:
         await consumer.stop()
 
 
-if __name__ == '__main__':
-    # Check environment variables passed to container
-    # pylama:ignore=C0103
-    env = {'KAFKA_SERVER', 'KAFKA_TOPIC', 'NEXT_MICROSERVICE_HOST'}
+def main():
+    """Service init function."""
+    if __name__ == '__main__':
+        # Check environment variables passed to container
+        # pylama:ignore=C0103
+        env = {'KAFKA_SERVER', 'KAFKA_TOPIC', 'NEXT_MICROSERVICE_HOST'}
 
-    if not env.issubset(os.environ):
-        logger.error(
-            'Environment not set properly, missing %s',
-            env - set(os.environ)
-        )
-        sys.exit(1)
+        if not env.issubset(os.environ):
+            logger.error(
+                'Environment not set properly, missing %s',
+                env - set(os.environ)
+            )
+            sys.exit(1)
 
-    # Run the consumer
-    MAIN_LOOP.run_until_complete(consume_messages())
+        # Run the consumer
+        MAIN_LOOP.run_until_complete(consume_messages())
+
+
+main()

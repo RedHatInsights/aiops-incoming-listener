@@ -14,7 +14,7 @@ import app as original_app
 def app(request, monkeypatch):
     """Set up environment and load app module."""
     # If param is provided, it means different path is being accessed.
-    path = request.param if hasattr(request, 'param') else str()
+    path = getattr(request, 'param', '')
     # Patch environment
     monkeypatch.setenv('NEXT_MICROSERVICE_HOST', f'localhost:5001/{path}')
     monkeypatch.setenv('KAFKA_SERVER', 'localhost:5002')

@@ -4,3 +4,4 @@ htmlcov/
 .coverage.*
 coverage.xml
 .pytest_cache/
+junit.xml

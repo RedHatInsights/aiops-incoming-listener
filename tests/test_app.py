@@ -3,6 +3,10 @@ from asyncio import Future
 import pytest
 from aiohttp import ClientResponseError, ClientConnectionError, ClientError
 
+# R0201 = Method could be a function Used when a method doesn't use its bound
+# instance, and so could be written as a function.
+# pylint: disable=R0201
+
 
 @pytest.mark.asyncio
 class TestHitNext:
@@ -143,3 +147,32 @@ class TestConsumeMessages:
         await app.consume_messages()
 
         assert kafka_consumer.call_args[0][0] == ['A_TOPIC', 'B_TOPIC']
+
+
+class TestMain:
+    """Test init setup of the service."""
+
+    @pytest.mark.parametrize('variable', (
+        'KAFKA_SERVER', 'KAFKA_TOPIC', 'NEXT_MICROSERVICE_HOST'
+    ))
+    def test_missing_env_variables(self, app, mocker, monkeypatch, variable):
+        """Should exit when required env variable is missing."""
+        mocker.patch.object(app, '__name__', '__main__')
+        monkeypatch.delenv(variable)
+
+        with pytest.raises(SystemExit) as err:
+            app.main()
+
+        assert err.value.code == 1
+
+    def test_consumer_started(self, app, mocker):
+        """Check that event loop was started when env is OK."""
+        mocker.patch.object(app, '__name__', '__main__')
+        mock_consumer = mocker.patch('app.consume_messages')
+        mock_consumer.return_value = Future()
+        mock_loop = mocker.patch('app.MAIN_LOOP')
+
+        app.main()
+
+        mock_consumer.assert_called_once()
+        mock_loop.run_until_complete.assert_called_once()
