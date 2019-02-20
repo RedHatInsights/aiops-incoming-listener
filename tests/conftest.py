@@ -1,8 +1,11 @@
 import asyncio
 from imp import reload
+from datetime import datetime
 
 import pytest
 from aiohttp import web
+from aiokafka import ConsumerRecord
+
 
 import app as original_app
 
@@ -56,3 +59,11 @@ async def stub_server(request, aiohttp_server):
     # Store the server in fixture
     output['server'] = server
     yield output
+
+
+@pytest.fixture(params=(b'{"url":"http://VALID_MESSAGE"}',))
+def message(request):
+    """Kafka message fixture."""
+    return ConsumerRecord(
+        'topic', 0, 0, datetime.now(), '', '', request.param, '', '', ''
+    )

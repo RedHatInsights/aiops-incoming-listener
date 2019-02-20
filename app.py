@@ -79,14 +79,14 @@ async def hit_next(msg_id: str, message: dict) -> aiohttp.ClientResponse:
     return resp
 
 
-async def process_message(message: ConsumerRecord) -> None:
+async def process_message(message: ConsumerRecord) -> bool:
     """Take a message and process it.
 
     Parse the collected message and check if it's in valid for. If so,
     validate it contains the data we're interested in and pass it to next
     service in line.
     :param message: Raw Kafka message which should be interpreted
-    :return: None
+    :return: Success of processing
     """
     msg_id = f'#{message.partition}_{message.offset}'
     logger.debug("Message %s: parsing...", msg_id)
@@ -99,20 +99,22 @@ async def process_message(message: ConsumerRecord) -> None:
             'Unable to parse message %s: %s',
             str(message), str(e)
         )
-        return
+        return False
 
     logger.debug('Message %s: %s', msg_id, str(message))
 
     # Select only the interesting messages
     if not VALIDATE_PRESENCE.issubset(message.keys()):
-        return
+        return False
 
     try:
         await hit_next(msg_id, message)
     except aiohttp.ClientError:
         logger.warning('Message %s: Unable to pass message', msg_id)
+        return False
 
     logger.info('Message %s: Done', msg_id)
+    return True
 
 
 async def consume_messages() -> None:
