@@ -37,7 +37,7 @@ HOST_URL = "http://{0}".format(os.environ.get('NEXT_MICROSERVICE_HOST'))
 MAX_RETRIES = 3
 
 
-async def hit_next(msg_id: str, message: dict) -> None:
+async def hit_next(msg_id: str, message: dict) -> aiohttp.ClientResponse:
     """Send message as JSON to the HOST via HTTP Post.
 
     Perform a async HTTP post call to the next micro-service endpoint
@@ -45,7 +45,7 @@ async def hit_next(msg_id: str, message: dict) -> None:
     The message is serialized as JSON
     :param msg_id: Message identifier used in logs
     :param message: A dictionary sent as a payload
-    :return: None
+    :return: HTTP response
     """
     # Basic response
     output = {
@@ -64,26 +64,29 @@ async def hit_next(msg_id: str, message: dict) -> None:
     async with aiohttp.ClientSession(raise_for_status=True) as session:
         for attempt in range(MAX_RETRIES):
             try:
-                await session.post(HOST_URL, json=output)
-            except aiohttp.ClientResponseError as e:
+                resp = await session.post(HOST_URL, json=output)
+                logger.debug('Message %s: sent', msg_id)
+                break
+            except aiohttp.ClientError as e:
                 logging.warning(
                     'Async request failed (attempt #%d), retrying: %s',
                     attempt, str(e)
                 )
-                continue
-            else:
-                break
-    logger.debug('Message %s: sent', msg_id)
+                resp = e
+        else:
+            logging.error('All attempts failed!')
+            raise resp
+    return resp
 
 
-async def process_message(message: ConsumerRecord) -> None:
+async def process_message(message: ConsumerRecord) -> bool:
     """Take a message and process it.
 
     Parse the collected message and check if it's in valid for. If so,
     validate it contains the data we're interested in and pass it to next
     service in line.
     :param message: Raw Kafka message which should be interpreted
-    :return: None
+    :return: Success of processing
     """
     msg_id = f'#{message.partition}_{message.offset}'
     logger.debug("Message %s: parsing...", msg_id)
@@ -96,17 +99,22 @@ async def process_message(message: ConsumerRecord) -> None:
             'Unable to parse message %s: %s',
             str(message), str(e)
         )
-        return
+        return False
 
     logger.debug('Message %s: %s', msg_id, str(message))
 
     # Select only the interesting messages
     if not VALIDATE_PRESENCE.issubset(message.keys()):
-        return
+        return False
 
-    await hit_next(msg_id, message)
+    try:
+        await hit_next(msg_id, message)
+    except aiohttp.ClientError:
+        logger.warning('Message %s: Unable to pass message', msg_id)
+        return False
 
     logger.info('Message %s: Done', msg_id)
+    return True
 
 
 async def consume_messages() -> None:
@@ -145,17 +153,22 @@ async def consume_messages() -> None:
         await consumer.stop()
 
 
-if __name__ == '__main__':
-    # Check environment variables passed to container
-    # pylama:ignore=C0103
-    env = {'KAFKA_SERVER', 'KAFKA_TOPIC', 'NEXT_MICROSERVICE_HOST'}
+def main():
+    """Service init function."""
+    if __name__ == '__main__':
+        # Check environment variables passed to container
+        # pylama:ignore=C0103
+        env = {'KAFKA_SERVER', 'KAFKA_TOPIC', 'NEXT_MICROSERVICE_HOST'}
 
-    if not env.issubset(os.environ):
-        logger.error(
-            'Environment not set properly, missing %s',
-            env - set(os.environ)
-        )
-        sys.exit(1)
+        if not env.issubset(os.environ):
+            logger.error(
+                'Environment not set properly, missing %s',
+                env - set(os.environ)
+            )
+            sys.exit(1)
 
-    # Run the consumer
-    MAIN_LOOP.run_until_complete(consume_messages())
+        # Run the consumer
+        MAIN_LOOP.run_until_complete(consume_messages())
+
+
+main()
