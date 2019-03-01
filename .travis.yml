@@ -10,3 +10,7 @@ script:
   - pytest --cov=. --cov-report=xml
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+notifications:
+  slack:
+    secure: FPWDAKnb39vRtzNR+W3XeR12RFVNKJRORkTaWiElc9V3hXotyqru02fK/ZKGBF39I/yD2fkEbmfgYeNOeGjMLvfWOts/+ynNyIzQ2CXW1K5Itp/R1Z+9VViXA9TZXcfW27gnKdXttjPstWYHS62wzVUkyO3mPgo1xpS770LOL1Rcc0g4/PyQQz4h1FzOXBHVD6D/lUgxw6OrF56t8FX3Yn+/f9lnnIp3/eS80xs58Yaq6ArG3HWB9+6lOlpnMeDl0/B1GJPZ+bVbNSS4sAXHgOoM/Rnv/ZlFbWsgeKCFz5tztqDr787RkaoxbNXB8MdOjejgr1whAIxmrPWCmD6ExOnQ0MmqBuHoIym4nleZFkPWSKNlZehyBanfmTYOmGGF1gF89lsV83YLdzDaPeddxoI+SnOJFHBHINBzydZn2mvFrOLoFXqBPWxi7Kcup60bSLlS50VidX9NkZ4YhhHg9j2EbsBLnTAOXr/XtAEnkTS0GsQub+ozVl9pJk/5lOSKzBYTCQc+CDlrxTNB/Jfw9g9IXdyDWc9KDz2ZqoEw/DZx0q9gBBRBKiG4tw3x4d7zn8BtKaf2X36IKJwi/imvpviM0Kaltc/DMLpujy3vUAksnbBirU0AAca2NU8uW7fpgKPbz0u7udvSZzqixO6YxCQ4OKjTirbpWXd5kBTCMwc=
+    on_pull_requests: false
