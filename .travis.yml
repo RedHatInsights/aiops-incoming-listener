@@ -7,4 +7,6 @@ install:
   - pipenv sync --dev
 script:
   - pylama
-  - pytest --cov="." --cov-report term-missing
+  - pytest --cov=. --cov-report=xml
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

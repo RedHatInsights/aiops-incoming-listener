@@ -1,6 +1,7 @@
 # AI-Ops: Incoming listener microservice
 
 [![Build Status](https://travis-ci.org/ManageIQ/aiops-incoming-listener.svg?branch=master)](https://travis-ci.org/ManageIQ/aiops-incoming-listener)
+[![codecov](https://codecov.io/gh/ManageIQ/aiops-incoming-listener/branch/master/graph/badge.svg)](https://codecov.io/gh/ManageIQ/aiops-incoming-listener)
 [![License](https://img.shields.io/badge/license-APACHE2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 
 Kafka listener collecting messages containing data relevant to AI-Ops
