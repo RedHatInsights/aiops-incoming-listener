@@ -46,6 +46,15 @@ def runStages() {
                 // Stages to run specifically if master branch was updated
             }
         }
+        stage("E2ETest") {
+            checkOutRepo(targetDir: iqe-test, repoUrl: "https://github.com/RedHatInsights/iqe-tests.git")
+            dir(iqe-test)
+            sh "pip install -U pip setuptools setuptools_scm wheel devpi-client"
+            sh "pip install -e ."
+            sh "devpi use http://devpi.devpi.svc:3141/root/psav --set-cfg"
+            sh "pip install iqe-aiops-plugin"
+            sh "iqe tests aiops -v -s -k test_e2e"
+        }
     }
 }
 

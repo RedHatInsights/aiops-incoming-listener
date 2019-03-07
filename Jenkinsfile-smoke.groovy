@@ -20,5 +20,6 @@ if (comment) {
         ocDeployerComponentPath: "aiops/aiops-data-collector",
         ocDeployerServiceSets: "aiops,platform",
         pytestMarker: "aiops_smoke",
+        iqePlugins: "iqe-aiops-plugin"
     )
 }
