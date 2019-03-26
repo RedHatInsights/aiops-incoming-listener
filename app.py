@@ -59,12 +59,19 @@ async def hit_next(msg_id: str, message: dict) -> aiohttp.ClientResponse:
             'rh_account': message.get('rh_account')
         }
 
+    # b64_identity
+    b64_identity = message.get('b64_identity', '')
+
     # Pass data to the next microservice
     logger.debug('Message %s: forwarding...', msg_id)
     async with aiohttp.ClientSession(raise_for_status=True) as session:
         for attempt in range(MAX_RETRIES):
             try:
-                resp = await session.post(HOST_URL, json=output)
+                resp = await session.post(
+                    HOST_URL,
+                    headers={"x-rh-identity": b64_identity},
+                    json=output
+                )
                 logger.debug('Message %s: sent', msg_id)
                 break
             except aiohttp.ClientError as e:
