@@ -34,6 +34,22 @@ class TestHitNext:
         assert request['content']['metadata']['rh_account'] == 'STUB_ACCOUNT'
         assert resp.status == 200
 
+    async def test_forward_b64_identity(self, app, stub_server):
+        """Provide 'b64_identity' in resp.request_info.headers."""
+        resp = await app.hit_next(
+            'STUB_ID',
+            {
+                'url': 'http://STUB.URL',
+                'b64_identity': 'abcde'
+            }
+        )
+
+        request = stub_server['requests'][0]
+
+        assert request['raw'].headers['x-rh-identity'] == 'abcde'
+        assert resp.request_info.headers['x-rh-identity'] == 'abcde'
+        assert resp.status == 200
+
     @pytest.mark.parametrize('app,stub_server', [
         ('INVALID_ENDPOINT', {'status': 404})
     ], indirect=True)
