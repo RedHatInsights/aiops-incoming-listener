@@ -33,7 +33,7 @@ CLIENT_ID = uuid4()
 VALIDATE_PRESENCE = {'url'}
 
 # Next micro-service host:port
-HOST_URL = "http://{0}".format(os.environ.get('NEXT_MICROSERVICE_HOST'))
+NEXT_SERVICE_URL = os.environ.get('NEXT_SERVICE_URL')
 MAX_RETRIES = 3
 
 
@@ -41,7 +41,7 @@ async def hit_next(msg_id: str, message: dict) -> aiohttp.ClientResponse:
     """Send message as JSON to the HOST via HTTP Post.
 
     Perform a async HTTP post call to the next micro-service endpoint
-    specified via NEXT_MICROSERVICE_HOST env. variable.
+    specified via NEXT_SERVICE_URL env. variable.
     The message is serialized as JSON
     :param msg_id: Message identifier used in logs
     :param message: A dictionary sent as a payload
@@ -68,7 +68,7 @@ async def hit_next(msg_id: str, message: dict) -> aiohttp.ClientResponse:
         for attempt in range(MAX_RETRIES):
             try:
                 resp = await session.post(
-                    HOST_URL,
+                    NEXT_SERVICE_URL,
                     headers={"x-rh-identity": b64_identity},
                     json=output
                 )
@@ -165,7 +165,7 @@ def main():
     if __name__ == '__main__':
         # Check environment variables passed to container
         # pylama:ignore=C0103
-        env = {'KAFKA_SERVER', 'KAFKA_TOPIC', 'NEXT_MICROSERVICE_HOST'}
+        env = {'KAFKA_SERVER', 'KAFKA_TOPIC', 'NEXT_SERVICE_URL'}
 
         if not env.issubset(os.environ):
             logger.error(
