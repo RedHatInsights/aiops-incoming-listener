@@ -16,9 +16,10 @@ echo "Triggered by comment: ${comment}"
 
 if (comment) {
     runSmokeTest (
-        ocDeployerBuilderPath: "aiops/aiops-data-collector",
-        ocDeployerComponentPath: "aiops/aiops-data-collector",
-        ocDeployerServiceSets: "aiops,platform",
+        ocDeployerBuilderPath: "aiops/aiops-incoming-listener",
+        ocDeployerComponentPath: "aiops/aiops-incoming-listener",
+        ocDeployerServiceSets: "aiops",
         pytestMarker: "aiops_smoke",
+        iqePlugins: "iqe-aiops-plugin"
     )
 }
