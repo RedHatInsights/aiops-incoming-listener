@@ -18,7 +18,7 @@ if (comment) {
     runSmokeTest (
         ocDeployerBuilderPath: "aiops/aiops-incoming-listener",
         ocDeployerComponentPath: "aiops/aiops-incoming-listener",
-        ocDeployerServiceSets: "aiops,platform",
+        ocDeployerServiceSets: "aiops",
         pytestMarker: "aiops_smoke",
         iqePlugins: "iqe-aiops-plugin"
     )
