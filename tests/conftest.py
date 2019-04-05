@@ -16,7 +16,7 @@ def app(request, monkeypatch):
     # If param is provided, it means different path is being accessed.
     path = getattr(request, 'param', '')
     # Patch environment
-    monkeypatch.setenv('NEXT_MICROSERVICE_HOST', f'localhost:5001/{path}')
+    monkeypatch.setenv('NEXT_SERVICE_URL', f'http://localhost:5001/{path}')
     monkeypatch.setenv('KAFKA_SERVER', 'localhost:5002')
     monkeypatch.setenv('KAFKA_TOPIC', 'STUB_TOPIC')
     monkeypatch.setenv('KAFKA_CLIENT_GROUP', 'STUB_GROUP')

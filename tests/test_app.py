@@ -169,7 +169,7 @@ class TestMain:
     """Test init setup of the service."""
 
     @pytest.mark.parametrize('variable', (
-        'KAFKA_SERVER', 'KAFKA_TOPIC', 'NEXT_MICROSERVICE_HOST'
+        'KAFKA_SERVER', 'KAFKA_TOPIC', 'NEXT_SERVICE_URL'
     ))
     def test_missing_env_variables(self, app, mocker, monkeypatch, variable):
         """Should exit when required env variable is missing."""
