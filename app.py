@@ -30,7 +30,7 @@ GROUP_ID = os.environ.get('KAFKA_CLIENT_GROUP')
 CLIENT_ID = uuid4()
 
 # Properties required to be present in a message
-VALIDATE_PRESENCE = {'url'}
+VALIDATE_PRESENCE = {'url', 'b64_identity'}
 
 # Next micro-service host:port
 NEXT_SERVICE_URL = os.environ.get('NEXT_SERVICE_URL')
@@ -111,7 +111,7 @@ async def process_message(message: ConsumerRecord) -> bool:
     logger.debug('Message %s: %s', msg_id, str(message))
 
     # Select only the interesting messages
-    if not VALIDATE_PRESENCE.issubset(message.keys()):
+    if not all(message.get(k) for k in VALIDATE_PRESENCE):
         return False
 
     try:
