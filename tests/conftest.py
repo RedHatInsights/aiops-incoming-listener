@@ -63,7 +63,9 @@ async def stub_server(request, aiohttp_server):
     yield output
 
 
-@pytest.fixture(params=(b'{"url":"http://VALID_MESSAGE"}',))
+@pytest.fixture(params=(
+    b'{"url":"http://VALID_MESSAGE","b64_identity":"abcd"}',
+))
 def message(request):
     """Kafka message fixture."""
     return ConsumerRecord(

@@ -103,10 +103,13 @@ class TestProcessMessage:
         b'{"a":"REQUIRED"}',
         b'{"b":"REQUIRED"}',
         b'{"a":"REQUIRED","B":"REQUIRED"}',
+        b'{"a":"REQUIRED","b":""}',
     ), indirect=True)
-    async def test_custom_key_invalid(self, app, message, monkeypatch):
+    async def test_custom_key_invalid(self, app, message, monkeypatch, mocker):
         """Custom `VALIDATE_PRESENCE` settings catches invalid message."""
         monkeypatch.setattr('app.VALIDATE_PRESENCE', {'a', 'b'})
+        mock = mocker.patch('app.hit_next', return_value=Future())
+        mock.return_value.set_result(True)
         success = await app.process_message(message)
 
         assert not success
