@@ -69,7 +69,7 @@ async def stub_server(request, aiohttp_server):
 def message(request):
     """Kafka message fixture."""
     return ConsumerRecord(
-        'topic', 0, 0, datetime.now(), '', '', request.param, '', '', ''
+        'topic', 0, 0, datetime.now(), '', '', request.param, '', '', '', ()
     )
 
 
