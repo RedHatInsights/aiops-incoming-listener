@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 aiokafka = "*"
 aiohttp = "*"
+flask = "*"
+gunicorn = "*"
 
 [dev-packages]
 pytest = "*"

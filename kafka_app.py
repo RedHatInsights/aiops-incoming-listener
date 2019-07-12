@@ -162,7 +162,7 @@ async def consume_messages() -> None:
 
 def main():
     """Service init function."""
-    if __name__ == '__main__':
+    if __name__ == 'kafka_app':
         # Check environment variables passed to container
         # pylama:ignore=C0103
         env = {'KAFKA_SERVER', 'KAFKA_TOPIC', 'NEXT_SERVICE_URL'}
@@ -176,6 +176,3 @@ def main():
 
         # Run the consumer
         MAIN_LOOP.run_until_complete(consume_messages())
-
-
-main()

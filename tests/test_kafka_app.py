@@ -92,7 +92,7 @@ class TestProcessMessage:
 
     async def test_valid_message(self, app, message, mocker):
         """Ensure that a valid message can be processed."""
-        mock = mocker.patch('app.hit_next', return_value=Future())
+        mock = mocker.patch('kafka_app.hit_next', return_value=Future())
         mock.return_value.set_result(True)
         success = await app.process_message(message)
 
@@ -107,8 +107,8 @@ class TestProcessMessage:
     ), indirect=True)
     async def test_custom_key_invalid(self, app, message, monkeypatch, mocker):
         """Custom `VALIDATE_PRESENCE` settings catches invalid message."""
-        monkeypatch.setattr('app.VALIDATE_PRESENCE', {'a', 'b'})
-        mock = mocker.patch('app.hit_next', return_value=Future())
+        monkeypatch.setattr('kafka_app.VALIDATE_PRESENCE', {'a', 'b'})
+        mock = mocker.patch('kafka_app.hit_next', return_value=Future())
         mock.return_value.set_result(True)
         success = await app.process_message(message)
 
@@ -119,8 +119,8 @@ class TestProcessMessage:
     ), indirect=True)
     async def test_custom_key_valid(self, app, message, monkeypatch, mocker):
         """Custom `VALIDATE_PRESENCE` settings works for a valid message."""
-        monkeypatch.setattr('app.VALIDATE_PRESENCE', {'a', 'b'})
-        mock = mocker.patch('app.hit_next', return_value=Future())
+        monkeypatch.setattr('kafka_app.VALIDATE_PRESENCE', {'a', 'b'})
+        mock = mocker.patch('kafka_app.hit_next', return_value=Future())
         mock.return_value.set_result(True)
         success = await app.process_message(message)
 
@@ -128,7 +128,7 @@ class TestProcessMessage:
 
     async def test_unable_to_hit_next(self, app, message, mocker):
         """Test when unable to pass message to next service."""
-        mocker.patch('app.hit_next', side_effect=ClientError())
+        mocker.patch('kafka_app.hit_next', side_effect=ClientError())
         success = await app.process_message(message)
 
         assert not success
@@ -154,7 +154,7 @@ class TestConsumeMessages:
         """Check if given amount of messages is really consumed."""
         # pylama:ignore=W0613
 
-        mock = mocker.patch('app.process_message', return_value=Future())
+        mock = mocker.patch('kafka_app.process_message', return_value=Future())
         mock.return_value.set_result(True)
 
         await app.consume_messages()
@@ -162,7 +162,7 @@ class TestConsumeMessages:
 
     async def test_multiple_topics(self, app, kafka_consumer, monkeypatch):
         """Test that multiple topic are propagated to Kafka."""
-        monkeypatch.setattr('app.TOPIC', ['A_TOPIC', 'B_TOPIC'])
+        monkeypatch.setattr('kafka_app.TOPIC', ['A_TOPIC', 'B_TOPIC'])
         await app.consume_messages()
 
         assert kafka_consumer.call_args[0][0] == ['A_TOPIC', 'B_TOPIC']
@@ -176,7 +176,7 @@ class TestMain:
     ))
     def test_missing_env_variables(self, app, mocker, monkeypatch, variable):
         """Should exit when required env variable is missing."""
-        mocker.patch.object(app, '__name__', '__main__')
+        mocker.patch.object(app, '__name__', 'kafka_app')
         monkeypatch.delenv(variable)
 
         with pytest.raises(SystemExit) as err:
@@ -186,10 +186,10 @@ class TestMain:
 
     def test_consumer_started(self, app, mocker):
         """Check that event loop was started when env is OK."""
-        mocker.patch.object(app, '__name__', '__main__')
-        mock_consumer = mocker.patch('app.consume_messages')
+        mocker.patch.object(app, '__name__', 'kafka_app')
+        mock_consumer = mocker.patch('kafka_app.consume_messages')
         mock_consumer.return_value = Future()
-        mock_loop = mocker.patch('app.MAIN_LOOP')
+        mock_loop = mocker.patch('kafka_app.MAIN_LOOP')
 
         app.main()
 
