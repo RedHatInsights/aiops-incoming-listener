@@ -36,6 +36,8 @@ VALIDATE_PRESENCE = {'url', 'b64_identity'}
 NEXT_SERVICE_URL = os.environ.get('NEXT_SERVICE_URL')
 MAX_RETRIES = 3
 
+KAFKA_RESOURCES = {}
+
 
 async def hit_next(msg_id: str, message: dict) -> aiohttp.ClientResponse:
     """Send message as JSON to the HOST via HTTP Post.
@@ -148,6 +150,7 @@ async def consume_messages() -> None:
 
     # Get cluster layout, subscribe to group
     await consumer.start()
+    KAFKA_RESOURCES['consumer'] = consumer
     logger.info('Consumer subscribed and active!')
 
     # Start consuming messages
