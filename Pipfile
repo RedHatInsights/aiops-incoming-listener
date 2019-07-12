@@ -8,6 +8,7 @@ aiokafka = "*"
 aiohttp = "*"
 flask = "*"
 gunicorn = "*"
+prometheus_client = "*"
 
 [dev-packages]
 pytest = "*"

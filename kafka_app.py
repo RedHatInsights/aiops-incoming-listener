@@ -8,6 +8,8 @@ import asyncio
 import aiohttp
 from aiokafka import AIOKafkaConsumer, ConsumerRecord
 
+import prometheus_metrics
+
 # Setup logging
 logging.basicConfig(
     level=logging.WARNING,
@@ -123,6 +125,7 @@ async def process_message(message: ConsumerRecord) -> bool:
         return False
 
     logger.info('Message %s: Done', msg_id)
+    prometheus_metrics.METRICS['processed_messages_total'].inc()
     return True
 
 
@@ -161,6 +164,11 @@ async def consume_messages() -> None:
 
     finally:
         await consumer.stop()
+
+
+def metrics():
+    """Metrics function."""
+    return prometheus_metrics.generate_aggregated_metrics()
 
 
 def main():
