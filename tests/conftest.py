@@ -94,3 +94,10 @@ def kafka_consumer(request, mocker):
     f_stop.set_result(True)
 
     yield consumer
+
+
+@pytest.fixture()
+async def kafka_consumer_start():
+    """Mock AIOKafkaConsumer as Subscribed and Active."""
+    await original_app.consume_messages()
+    return True
