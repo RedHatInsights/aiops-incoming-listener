@@ -38,7 +38,14 @@ VALIDATE_PRESENCE = {'url', 'b64_identity'}
 NEXT_SERVICE_URL = os.environ.get('NEXT_SERVICE_URL')
 MAX_RETRIES = 3
 
-KAFKA_RESOURCES = {}
+KAFKA_CLIENT = None
+
+
+# W0212 Access to a protected member _conns of a client class [pylint]
+# pylint: disable=W0212
+
+# W0603 Using the global statement [pylint]
+# pylint: disable=W0603
 
 
 async def hit_next(msg_id: str, message: dict) -> aiohttp.ClientResponse:
@@ -153,7 +160,10 @@ async def consume_messages() -> None:
 
     # Get cluster layout, subscribe to group
     await consumer.start()
-    KAFKA_RESOURCES['consumer'] = consumer
+
+    global KAFKA_CLIENT
+    KAFKA_CLIENT = consumer._client
+
     logger.info('Consumer subscribed and active!')
 
     # Start consuming messages

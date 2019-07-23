@@ -48,8 +48,8 @@ application = create_application()
 @application.route("/", methods=['GET'])
 def get_root():
     """Root Endpoint."""
-    if APP.KAFKA_RESOURCES.get('consumer') and \
-            APP.KAFKA_RESOURCES.get('consumer')._client._conns:
+    kafka_client = APP.KAFKA_CLIENT
+    if kafka_client and kafka_client._conns:
         return jsonify(
             status='OK',
             message='Listener Up and Running'
