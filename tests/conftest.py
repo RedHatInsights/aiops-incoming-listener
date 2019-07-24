@@ -7,7 +7,7 @@ from aiohttp import web
 from aiokafka import ConsumerRecord
 import asynctest
 
-import app as original_app
+import kafka_app as original_app
 
 
 @pytest.fixture
@@ -24,7 +24,7 @@ def app(request, monkeypatch):
     # Setup new asyncio loop
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    monkeypatch.setattr('app.MAIN_LOOP', loop)
+    monkeypatch.setattr('kafka_app.MAIN_LOOP', loop)
 
     # Reload app module to propagate env. changes
     reload(original_app)
@@ -69,7 +69,7 @@ async def stub_server(request, aiohttp_server):
 def message(request):
     """Kafka message fixture."""
     return ConsumerRecord(
-        'topic', 0, 0, datetime.now(), '', '', request.param, '', '', ''
+        'topic', 0, 0, datetime.now(), '', '', request.param, '', '', '', ()
     )
 
 
@@ -82,7 +82,7 @@ def kafka_consumer(request, mocker):
     - stop()
     - consumed message list (taken from `request.param`)
     """
-    consumer = mocker.patch('app.AIOKafkaConsumer',
+    consumer = mocker.patch('kafka_app.AIOKafkaConsumer',
                             new_callable=asynctest.MagicMock)
 
     f_start = asyncio.Future()
@@ -94,3 +94,10 @@ def kafka_consumer(request, mocker):
     f_stop.set_result(True)
 
     yield consumer
+
+
+@pytest.fixture()
+async def kafka_consumer_start():
+    """Mock AIOKafkaConsumer as Subscribed and Active."""
+    await original_app.consume_messages()
+    return True

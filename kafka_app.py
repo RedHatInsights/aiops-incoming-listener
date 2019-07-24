@@ -8,6 +8,8 @@ import asyncio
 import aiohttp
 from aiokafka import AIOKafkaConsumer, ConsumerRecord
 
+import prometheus_metrics
+
 # Setup logging
 logging.basicConfig(
     level=logging.WARNING,
@@ -35,6 +37,8 @@ VALIDATE_PRESENCE = {'url', 'b64_identity'}
 # Next micro-service host:port
 NEXT_SERVICE_URL = os.environ.get('NEXT_SERVICE_URL')
 MAX_RETRIES = 3
+
+KAFKA_CLIENT = None
 
 
 async def hit_next(msg_id: str, message: dict) -> aiohttp.ClientResponse:
@@ -121,6 +125,7 @@ async def process_message(message: ConsumerRecord) -> bool:
         return False
 
     logger.info('Message %s: Done', msg_id)
+    prometheus_metrics.METRICS['processed_messages_total'].inc()
     return True
 
 
@@ -148,6 +153,15 @@ async def consume_messages() -> None:
 
     # Get cluster layout, subscribe to group
     await consumer.start()
+
+    # W0212 Access to a protected member _conns of a client class [pylint]
+    # pylint: disable=W0212
+
+    # W0603 Using the global statement [pylint]
+    # pylint: disable=W0603
+    global KAFKA_CLIENT
+    KAFKA_CLIENT = consumer._client
+
     logger.info('Consumer subscribed and active!')
 
     # Start consuming messages
@@ -160,9 +174,14 @@ async def consume_messages() -> None:
         await consumer.stop()
 
 
+def metrics():
+    """Metrics function."""
+    return prometheus_metrics.generate_aggregated_metrics()
+
+
 def main():
     """Service init function."""
-    if __name__ == '__main__':
+    if __name__ == 'kafka_app':
         # Check environment variables passed to container
         # pylama:ignore=C0103
         env = {'KAFKA_SERVER', 'KAFKA_TOPIC', 'NEXT_SERVICE_URL'}
@@ -176,6 +195,3 @@ def main():
 
         # Run the consumer
         MAIN_LOOP.run_until_complete(consume_messages())
-
-
-main()
